@@ -1,33 +1,95 @@
-import { useState, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 
-// ─── Colors (matches portfolio palette) ────────────────────────────────────
-const C = {
-  primary: "#1C5A9C",
-  secondary: "#6A65A6",
-  accent: "#FF6B9D",
-  dark: "#0F1B2D",
-  card: "#162038",
-  darker: "#0a1220",
-  border: "rgba(255,255,255,0.07)",
-  borderHover: "rgba(255,107,157,0.35)",
-  textLight: "#E8EDF4",
-  textMuted: "#94A3B8",
-  white: "#FFFFFF",
-  triggerFill: "rgba(28,90,156,0.18)",
-  triggerBorder: "#1C5A9C",
-  filterFill: "rgba(180,83,9,0.18)",
-  filterBorder: "#d97706",
-  actionFill: "rgba(106,101,166,0.18)",
-  actionBorder: "#6A65A6",
-  endFill: "rgba(5,150,105,0.18)",
-  endBorder: "#059669",
+// ---------------------------------------------------------------------------
+// Zapier Workflow Visualizer
+// Single-file React component designed to embed alongside the rest of the
+// portfolio. Styled in the shared Mineral & Paper Executive Light Mode palette
+// to match the Executive Assistant Control Center. Inline styles only, no libs.
+// ---------------------------------------------------------------------------
+
+// Mineral & Paper — Executive Light Mode palette (identical to EA Control Center)
+const COLORS = {
+  // Surfaces
+  background: "#EEE4D3",      // Light Beige Linen — body
+  cardBg: "#FDFEFA",          // Paper White — primary cards
+  cardBgMuted: "#F5ECD9",     // Warm linen — nested surfaces / filter chips
+
+  // Typography & borders
+  text: "#3F4E64",            // Charcoal Slate — primary text
+  textSecondary: "#6B7385",   // Muted slate — metadata, hints
+  borderColor: "rgba(63, 78, 100, 0.14)",
+  borderStrong: "rgba(63, 78, 100, 0.32)",
+
+  // Accent (primary / active)
+  accent: "#C39E6D",          // Antique Brass
+  accentDim: "rgba(195, 158, 109, 0.18)",
+
+  // Critical / blocking
+  critical: "#EFD5CE",
+  criticalBorder: "rgba(176, 90, 70, 0.55)",
+  criticalText: "#A85C4A",
+
+  // Pastel status tokens — WCAG AA with charcoal text
+  sage: "#BDCBB8",            // IN PROGRESS / END (~5.0:1)
+  sageBorder: "rgba(115, 139, 106, 0.55)",
+  sageText: "#5C7048",        // Readable sage for small icons
+  slateBlue: "#B9CAD3",       // Informational / TRIGGER (~5.0:1)
+  slateBlueBorder: "rgba(92, 126, 142, 0.55)",
+  slateBlueText: "#3F5A6B",
+
+  // Semantic aliases
+  success: "#BDCBB8",
+  warning: "#C39E6D",
+  error: "#A85C4A",
 };
 
+const FONT_STACK =
+  "'Inter', 'Geist', ui-sans-serif, -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif";
+const MONO_STACK =
+  "'JetBrains Mono', 'Geist Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace";
+
+// ---------------------------------------------------------------------------
+// Node-type semantic map — each node type maps to a Mineral & Paper pastel
+// with its own border color. Text on all of these is charcoal (COLORS.text).
+// ---------------------------------------------------------------------------
+const NODE_STYLES = {
+  trigger: {
+    fill: COLORS.slateBlue,
+    border: "#5C7E8E",
+    label: "TRIGGER",
+  },
+  filter: {
+    fill: COLORS.cardBgMuted,
+    border: COLORS.accent,
+    label: "FILTER",
+  },
+  action: {
+    fill: COLORS.accentDim,
+    border: COLORS.accent,
+    label: "ACTION",
+  },
+  end: {
+    fill: COLORS.sage,
+    border: "#738B6A",
+    label: "FINAL",
+  },
+};
+
+// Muted app color palette — chosen to read well on cream/paper surfaces while
+// still being visually distinct. All app badges use white text.
 const APP_COLORS = {
-  Typeform: "#262627", HubSpot: "#FF7A59", Gmail: "#EA4335",
-  Asana: "#F06A6A", Slack: "#4A154B", "Google Calendar": "#4285F4",
-  Calendly: "#006BFF", "Google Sheets": "#34A853", "Google Drive": "#4285F4",
-  "Claude AI": "#D97706", Zapier: "#FF4A00", Notion: "#E2E8F0",
+  Typeform: "#2D2D2D",
+  HubSpot: "#C65A3A",
+  Gmail: "#B4362F",
+  Asana: "#B5504F",
+  Slack: "#4A154B",
+  "Google Calendar": "#3B6EC4",
+  Calendly: "#3B6EC4",
+  "Google Sheets": "#2F8B4F",
+  "Google Drive": "#3B6EC4",
+  "Claude AI": "#C39E6D",
+  Zapier: "#C65A3A",
+  Notion: "#3F4E64",
 };
 
 const APP_INIT = {
@@ -36,7 +98,9 @@ const APP_INIT = {
   "Google Drive": "GD", "Claude AI": "AI", Zapier: "Zp", Notion: "No",
 };
 
-// ─── Workflow data ──────────────────────────────────────────────────────────
+// ---------------------------------------------------------------------------
+// Workflow data (preserved from source — same structure, same copy)
+// ---------------------------------------------------------------------------
 const WORKFLOWS = [
   {
     id: "lead-intake",
@@ -300,34 +364,30 @@ const WORKFLOWS = [
   },
 ];
 
-// ─── SVG Flowchart ──────────────────────────────────────────────────────────
+// ---------------------------------------------------------------------------
+// SVG Flowchart primitives
+// ---------------------------------------------------------------------------
 const NODE_W = 238;
 const NODE_H = 54;
 const NODE_GAP = 48;
 const CANVAS_PAD = 16;
 
 function nodeStyle(type) {
-  const map = {
-    trigger: { fill: C.triggerFill, stroke: C.triggerBorder },
-    filter:  { fill: C.filterFill,  stroke: C.filterBorder  },
-    action:  { fill: C.actionFill,  stroke: C.actionBorder  },
-    end:     { fill: C.endFill,     stroke: C.endBorder     },
-  };
-  return map[type] || map.action;
-}
-
-function typeLabel(type) {
-  return { trigger: "TRIGGER", filter: "FILTER", action: "ACTION", end: "ACTION" }[type] || "ACTION";
+  return NODE_STYLES[type] || NODE_STYLES.action;
 }
 
 function AppBadge({ app, x, y }) {
-  const color = APP_COLORS[app] || "#6A65A6";
+  const color = APP_COLORS[app] || COLORS.text;
   const initials = APP_INIT[app] || app.slice(0, 2);
   return (
     <g>
-      <circle cx={x + 12} cy={y} r={12} fill={color} opacity={0.9} />
-      <text x={x + 12} y={y + 4} textAnchor="middle"
-        style={{ fontSize: 8, fill: "#fff", fontFamily: "'DM Sans',sans-serif", fontWeight: 700 }}>
+      <circle cx={x + 12} cy={y} r={12} fill={color} opacity={0.95} />
+      <text
+        x={x + 12}
+        y={y + 4}
+        textAnchor="middle"
+        style={{ fontSize: 8, fill: "#FFFFFF", fontFamily: FONT_STACK, fontWeight: 700 }}
+      >
         {initials.slice(0, 2)}
       </text>
     </g>
@@ -337,24 +397,70 @@ function AppBadge({ app, x, y }) {
 function FlowNode({ node, index, selected, onClick }) {
   const x = CANVAS_PAD;
   const y = CANVAS_PAD + index * (NODE_H + NODE_GAP);
-  const { fill, stroke } = nodeStyle(node.type);
+  const { fill, border, label } = nodeStyle(node.type);
   const isSel = selected === node.id;
   return (
     <g onClick={() => onClick(node.id)} style={{ cursor: "pointer" }}>
       {isSel && (
-        <rect x={x - 3} y={y - 3} width={NODE_W + 6} height={NODE_H + 6}
-          rx={13} fill="none" stroke={stroke} strokeWidth={2} opacity={0.4} />
+        <rect
+          x={x - 3}
+          y={y - 3}
+          width={NODE_W + 6}
+          height={NODE_H + 6}
+          rx={13}
+          fill="none"
+          stroke={COLORS.accent}
+          strokeWidth={2}
+          opacity={0.6}
+        />
       )}
-      <rect x={x} y={y} width={NODE_W} height={NODE_H} rx={10} fill={fill}
-        stroke={isSel ? stroke : "rgba(255,255,255,0.1)"} strokeWidth={isSel ? 1.5 : 1} />
-      <rect x={x} y={y} width={4} height={NODE_H} rx={2} fill={stroke} />
-      <rect x={x + 12} y={y + 8} width={52} height={16} rx={8} fill={stroke} opacity={0.25} />
-      <text x={x + 38} y={y + 20} textAnchor="middle"
-        style={{ fontSize: 8.5, fill: stroke, fontFamily: "'DM Sans',sans-serif", fontWeight: 700, letterSpacing: 1 }}>
-        {typeLabel(node.type)}
+      <rect
+        x={x}
+        y={y}
+        width={NODE_W}
+        height={NODE_H}
+        rx={10}
+        fill={fill}
+        stroke={isSel ? border : COLORS.borderColor}
+        strokeWidth={isSel ? 1.5 : 1}
+      />
+      {/* Left accent rail */}
+      <rect x={x} y={y} width={4} height={NODE_H} rx={2} fill={border} />
+      {/* Type chip */}
+      <rect
+        x={x + 12}
+        y={y + 8}
+        width={54}
+        height={16}
+        rx={8}
+        fill={COLORS.cardBg}
+        stroke={border}
+        strokeWidth={0.75}
+      />
+      <text
+        x={x + 39}
+        y={y + 19}
+        textAnchor="middle"
+        style={{
+          fontSize: 8.5,
+          fill: COLORS.text,
+          fontFamily: FONT_STACK,
+          fontWeight: 700,
+          letterSpacing: 1,
+        }}
+      >
+        {label}
       </text>
-      <text x={x + 14} y={y + 36}
-        style={{ fontSize: 12.5, fill: C.textLight, fontFamily: "'DM Sans',sans-serif", fontWeight: 600 }}>
+      <text
+        x={x + 14}
+        y={y + 40}
+        style={{
+          fontSize: 12.5,
+          fill: COLORS.text,
+          fontFamily: FONT_STACK,
+          fontWeight: 600,
+        }}
+      >
         {node.label.length > 28 ? node.label.slice(0, 26) + "…" : node.label}
       </text>
       <AppBadge app={node.app} x={x + NODE_W - 30} y={y + NODE_H / 2} />
@@ -365,131 +471,337 @@ function FlowNode({ node, index, selected, onClick }) {
 function FlowArrow({ index, nodeCount }) {
   if (index >= nodeCount - 1) return null;
   const fromY = CANVAS_PAD + index * (NODE_H + NODE_GAP) + NODE_H;
-  const toY   = fromY + NODE_GAP;
-  const cx    = CANVAS_PAD + NODE_W / 2;
+  const toY = fromY + NODE_GAP;
+  const cx = CANVAS_PAD + NODE_W / 2;
   return (
     <g>
-      <line x1={cx} y1={fromY + 2} x2={cx} y2={toY - 8}
-        stroke="rgba(255,255,255,0.15)" strokeWidth={1.5} strokeDasharray="3 3" />
-      <polygon points={`${cx - 5},${toY - 8} ${cx + 5},${toY - 8} ${cx},${toY - 1}`}
-        fill="rgba(255,255,255,0.2)" />
+      <line
+        x1={cx}
+        y1={fromY + 2}
+        x2={cx}
+        y2={toY - 8}
+        stroke={COLORS.borderStrong}
+        strokeWidth={1.5}
+        strokeDasharray="3 3"
+      />
+      <polygon
+        points={`${cx - 5},${toY - 8} ${cx + 5},${toY - 8} ${cx},${toY - 1}`}
+        fill={COLORS.borderStrong}
+      />
     </g>
   );
 }
 
 function FlowChart({ workflow, selectedNode, onSelect }) {
-  const canvasH = CANVAS_PAD * 2 + workflow.nodes.length * NODE_H + (workflow.nodes.length - 1) * NODE_GAP;
+  const canvasH =
+    CANVAS_PAD * 2 + workflow.nodes.length * NODE_H + (workflow.nodes.length - 1) * NODE_GAP;
   const canvasW = CANVAS_PAD * 2 + NODE_W;
   return (
-    <div style={{ overflowY: "auto", overflowX: "hidden", maxHeight: 520 }}>
+    <div
+      style={{
+        overflowY: "auto",
+        overflowX: "hidden",
+        maxHeight: 540,
+        background: COLORS.cardBg,
+        border: `1px solid ${COLORS.borderColor}`,
+        borderRadius: 12,
+        padding: 8,
+        boxShadow: "0 1px 2px rgba(63, 78, 100, 0.04), 0 8px 24px rgba(63, 78, 100, 0.06)",
+      }}
+    >
       <svg width={canvasW} height={canvasH} style={{ display: "block" }}>
         {workflow.nodes.map((_, i) => (
           <FlowArrow key={i} index={i} nodeCount={workflow.nodes.length} />
         ))}
         {workflow.nodes.map((node, i) => (
-          <FlowNode key={node.id} node={node} index={i} selected={selectedNode} onClick={onSelect} />
+          <FlowNode
+            key={node.id}
+            node={node}
+            index={i}
+            selected={selectedNode}
+            onClick={onSelect}
+          />
         ))}
       </svg>
     </div>
   );
 }
 
-// ─── Node Detail Panel ──────────────────────────────────────────────────────
+// ---------------------------------------------------------------------------
+// Node Detail Panel
+// ---------------------------------------------------------------------------
 function NodeDetail({ node, onClose }) {
-  const { stroke } = nodeStyle(node.type);
-  const appColor = APP_COLORS[node.app] || C.secondary;
+  const { border, label } = nodeStyle(node.type);
+  const appColor = APP_COLORS[node.app] || COLORS.text;
   return (
-    <div style={{
-      background: C.card, border: `1px solid ${C.border}`,
-      borderRadius: 16, padding: 24,
-      display: "flex", flexDirection: "column", gap: 18,
-      borderLeft: `3px solid ${stroke}`,
-    }}>
+    <div
+      style={{
+        background: COLORS.cardBg,
+        border: `1px solid ${COLORS.borderColor}`,
+        borderLeft: `3px solid ${COLORS.accent}`,
+        borderRadius: 12,
+        padding: 24,
+        display: "flex",
+        flexDirection: "column",
+        gap: 18,
+        fontFamily: FONT_STACK,
+        color: COLORS.text,
+        boxShadow: "0 1px 2px rgba(63, 78, 100, 0.04), 0 8px 24px rgba(63, 78, 100, 0.06)",
+      }}
+    >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
         <div>
-          <div style={{
-            display: "inline-flex", alignItems: "center", gap: 6,
-            padding: "3px 10px", borderRadius: 50, marginBottom: 10,
-            background: stroke + "20", border: `1px solid ${stroke}40`,
-          }}>
-            <span style={{ width: 6, height: 6, borderRadius: "50%", background: stroke, display: "inline-block" }} />
-            <span style={{ fontSize: 10, color: stroke, fontFamily: "'DM Sans',sans-serif", fontWeight: 700, letterSpacing: 1 }}>
-              {typeLabel(node.type)}
+          <div
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              padding: "3px 10px",
+              borderRadius: 50,
+              marginBottom: 10,
+              background: COLORS.accentDim,
+              border: `1px solid ${COLORS.accent}`,
+            }}
+          >
+            <span
+              style={{
+                width: 6,
+                height: 6,
+                borderRadius: "50%",
+                background: border,
+                display: "inline-block",
+              }}
+            />
+            <span
+              style={{
+                fontSize: 10,
+                color: COLORS.text,
+                fontFamily: FONT_STACK,
+                fontWeight: 700,
+                letterSpacing: 1,
+              }}
+            >
+              {label}
             </span>
           </div>
-          <h3 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: C.textLight, fontFamily: "'DM Sans',sans-serif", lineHeight: 1.3 }}>
+          <h3
+            style={{
+              margin: 0,
+              fontSize: 17,
+              fontWeight: 700,
+              color: COLORS.text,
+              fontFamily: FONT_STACK,
+              lineHeight: 1.3,
+            }}
+          >
             {node.label}
           </h3>
         </div>
-        <button onClick={onClose} style={{
-          background: "rgba(255,255,255,0.06)", border: `1px solid ${C.border}`,
-          borderRadius: 8, width: 28, height: 28, cursor: "pointer",
-          color: C.textMuted, fontSize: 14, display: "flex", alignItems: "center", justifyContent: "center",
-          flexShrink: 0,
-        }}>✕</button>
+        <button
+          onClick={onClose}
+          style={{
+            background: COLORS.cardBgMuted,
+            border: `1px solid ${COLORS.borderColor}`,
+            borderRadius: 8,
+            width: 28,
+            height: 28,
+            cursor: "pointer",
+            color: COLORS.text,
+            fontSize: 14,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            flexShrink: 0,
+            fontFamily: FONT_STACK,
+          }}
+        >
+          ✕
+        </button>
       </div>
 
+      {/* App row */}
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <div style={{
-          width: 32, height: 32, borderRadius: 8, background: appColor,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          fontSize: 11, fontWeight: 700, color: "#fff", fontFamily: "'DM Sans',sans-serif", flexShrink: 0,
-        }}>
+        <div
+          style={{
+            width: 32,
+            height: 32,
+            borderRadius: 8,
+            background: appColor,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: 11,
+            fontWeight: 700,
+            color: "#FFFFFF",
+            fontFamily: FONT_STACK,
+            flexShrink: 0,
+          }}
+        >
           {(APP_INIT[node.app] || node.app.slice(0, 2)).slice(0, 2)}
         </div>
         <div>
-          <div style={{ fontSize: 11, color: C.textMuted, fontFamily: "'DM Sans',sans-serif" }}>App</div>
-          <div style={{ fontSize: 13, fontWeight: 600, color: C.textLight, fontFamily: "'DM Sans',sans-serif" }}>{node.app}</div>
+          <div
+            style={{
+              fontSize: 11,
+              color: COLORS.textSecondary,
+              fontFamily: FONT_STACK,
+              textTransform: "uppercase",
+              letterSpacing: 1,
+              fontWeight: 700,
+            }}
+          >
+            App
+          </div>
+          <div style={{ fontSize: 13, fontWeight: 600, color: COLORS.text, fontFamily: FONT_STACK }}>
+            {node.app}
+          </div>
         </div>
       </div>
 
+      {/* What it does */}
       <div>
-        <div style={{ fontSize: 11, color: C.textMuted, fontFamily: "'DM Sans',sans-serif", letterSpacing: 0.5, marginBottom: 6, textTransform: "uppercase" }}>
+        <div
+          style={{
+            fontSize: 11,
+            color: COLORS.textSecondary,
+            fontFamily: FONT_STACK,
+            letterSpacing: 1,
+            marginBottom: 6,
+            textTransform: "uppercase",
+            fontWeight: 700,
+            borderLeft: `3px solid ${COLORS.accent}`,
+            paddingLeft: 8,
+          }}
+        >
           What it does
         </div>
-        <p style={{ margin: 0, fontSize: 13.5, color: C.textLight, fontFamily: "'DM Sans',sans-serif", lineHeight: 1.7 }}>
+        <p
+          style={{
+            margin: 0,
+            fontSize: 13.5,
+            color: COLORS.text,
+            fontFamily: FONT_STACK,
+            lineHeight: 1.7,
+          }}
+        >
           {node.description}
         </p>
       </div>
 
+      {/* Data used */}
       <div>
-        <div style={{ fontSize: 11, color: C.textMuted, fontFamily: "'DM Sans',sans-serif", letterSpacing: 0.5, marginBottom: 8, textTransform: "uppercase" }}>
+        <div
+          style={{
+            fontSize: 11,
+            color: COLORS.textSecondary,
+            fontFamily: FONT_STACK,
+            letterSpacing: 1,
+            marginBottom: 8,
+            textTransform: "uppercase",
+            fontWeight: 700,
+            borderLeft: `3px solid ${COLORS.accent}`,
+            paddingLeft: 8,
+          }}
+        >
           Data used
         </div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
           {node.dataUsed.map((d, i) => (
-            <span key={i} style={{
-              padding: "3px 10px", borderRadius: 50, fontSize: 11,
-              background: "rgba(255,255,255,0.05)", color: C.textMuted,
-              border: `1px solid ${C.border}`, fontFamily: "'DM Sans',sans-serif",
-            }}>{d}</span>
+            <span
+              key={i}
+              style={{
+                padding: "3px 10px",
+                borderRadius: 50,
+                fontSize: 11,
+                background: COLORS.cardBgMuted,
+                color: COLORS.text,
+                border: `1px solid ${COLORS.borderColor}`,
+                fontFamily: FONT_STACK,
+                fontWeight: 500,
+              }}
+            >
+              {d}
+            </span>
           ))}
         </div>
       </div>
 
+      {/* Metric grid */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         {[
-          { label: "Time Impact", value: node.timeSaved, color: "#34D399" },
-          { label: "Setup Time",  value: node.setupTime,  color: C.accent  },
-        ].map(({ label, value, color }) => (
-          <div key={label} style={{
-            background: "rgba(255,255,255,0.03)", borderRadius: 10,
-            padding: "12px 14px", border: `1px solid ${C.border}`,
-          }}>
-            <div style={{ fontSize: 10, color: C.textMuted, fontFamily: "'DM Sans',sans-serif", marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>{label}</div>
-            <div style={{ fontSize: 12.5, fontWeight: 600, color, fontFamily: "'DM Sans',sans-serif", lineHeight: 1.4 }}>{value}</div>
+          { label: "Time Impact", value: node.timeSaved, chip: COLORS.sage, chipBorder: COLORS.sageBorder },
+          { label: "Setup Time", value: node.setupTime, chip: COLORS.slateBlue, chipBorder: COLORS.slateBlueBorder },
+        ].map(({ label: l, value, chip, chipBorder }) => (
+          <div
+            key={l}
+            style={{
+              background: chip,
+              borderRadius: 10,
+              padding: "12px 14px",
+              border: `1px solid ${chipBorder}`,
+            }}
+          >
+            <div
+              style={{
+                fontSize: 10,
+                color: COLORS.text,
+                opacity: 0.75,
+                fontFamily: FONT_STACK,
+                marginBottom: 4,
+                textTransform: "uppercase",
+                letterSpacing: 1,
+                fontWeight: 700,
+              }}
+            >
+              {l}
+            </div>
+            <div
+              style={{
+                fontSize: 12.5,
+                fontWeight: 700,
+                color: COLORS.text,
+                fontFamily: FONT_STACK,
+                lineHeight: 1.4,
+              }}
+            >
+              {value}
+            </div>
           </div>
         ))}
       </div>
 
-      <div style={{
-        background: "rgba(106,101,166,0.08)", borderRadius: 10,
-        padding: "12px 14px", border: "1px solid rgba(106,101,166,0.2)",
-      }}>
-        <div style={{ fontSize: 10, color: C.secondary, fontFamily: "'DM Sans',sans-serif", marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>
+      {/* Implementation note */}
+      <div
+        style={{
+          background: COLORS.cardBgMuted,
+          borderRadius: 10,
+          padding: "12px 14px",
+          border: `1px solid ${COLORS.borderColor}`,
+          borderLeft: `3px solid ${COLORS.accent}`,
+        }}
+      >
+        <div
+          style={{
+            fontSize: 10,
+            color: COLORS.textSecondary,
+            fontFamily: FONT_STACK,
+            marginBottom: 4,
+            textTransform: "uppercase",
+            letterSpacing: 1,
+            fontWeight: 700,
+          }}
+        >
           Implementation note
         </div>
-        <p style={{ margin: 0, fontSize: 12.5, color: C.textMuted, fontFamily: "'DM Sans',sans-serif", lineHeight: 1.6 }}>
+        <p
+          style={{
+            margin: 0,
+            fontSize: 12.5,
+            color: COLORS.text,
+            fontFamily: FONT_STACK,
+            lineHeight: 1.6,
+          }}
+        >
           {node.detail}
         </p>
       </div>
@@ -497,74 +809,200 @@ function NodeDetail({ node, onClose }) {
   );
 }
 
-// ─── Workflow Overview ───────────────────────────────────────────────────────
+// ---------------------------------------------------------------------------
+// Workflow Overview (right column when no node selected)
+// ---------------------------------------------------------------------------
 function WorkflowOverview({ workflow }) {
   return (
-    <div style={{
-      background: C.card, border: `1px solid ${C.border}`,
-      borderRadius: 16, padding: 24,
-      display: "flex", flexDirection: "column", gap: 20,
-    }}>
+    <div
+      style={{
+        background: COLORS.cardBg,
+        border: `1px solid ${COLORS.borderColor}`,
+        borderLeft: `3px solid ${COLORS.accent}`,
+        borderRadius: 12,
+        padding: 24,
+        display: "flex",
+        flexDirection: "column",
+        gap: 20,
+        fontFamily: FONT_STACK,
+        color: COLORS.text,
+        boxShadow: "0 1px 2px rgba(63, 78, 100, 0.04), 0 8px 24px rgba(63, 78, 100, 0.06)",
+      }}
+    >
       <div>
         <div style={{ fontSize: 28, marginBottom: 12 }}>{workflow.icon}</div>
-        <h3 style={{ margin: "0 0 10px", fontSize: 17, fontWeight: 700, color: C.white, fontFamily: "'DM Sans',sans-serif" }}>
+        <h3
+          style={{
+            margin: "0 0 10px",
+            fontSize: 18,
+            fontWeight: 700,
+            color: COLORS.text,
+            fontFamily: FONT_STACK,
+          }}
+        >
           {workflow.title}
         </h3>
-        <p style={{ margin: 0, fontSize: 13.5, color: C.textMuted, fontFamily: "'DM Sans',sans-serif", lineHeight: 1.7 }}>
+        <p
+          style={{
+            margin: 0,
+            fontSize: 13.5,
+            color: COLORS.textSecondary,
+            fontFamily: FONT_STACK,
+            lineHeight: 1.7,
+          }}
+        >
           {workflow.summary}
         </p>
       </div>
 
+      {/* Metric pair */}
       <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         {[
-          { label: "Time Saved", value: workflow.timeSaved, color: "#34D399" },
-          { label: "Impact",     value: workflow.roi,       color: C.accent  },
-        ].map(({ label, value, color }) => (
-          <div key={label} style={{
-            background: "rgba(255,255,255,0.03)", borderRadius: 12,
-            padding: "14px 16px", border: `1px solid ${C.border}`,
-          }}>
-            <div style={{ fontSize: 10, color: C.textMuted, fontFamily: "'DM Sans',sans-serif", marginBottom: 4, textTransform: "uppercase", letterSpacing: 0.5 }}>{label}</div>
-            <div style={{ fontSize: 13, fontWeight: 700, color, fontFamily: "'DM Sans',sans-serif" }}>{value}</div>
+          { label: "Time Saved", value: workflow.timeSaved, chip: COLORS.sage, chipBorder: COLORS.sageBorder },
+          { label: "Impact", value: workflow.roi, chip: COLORS.accentDim, chipBorder: COLORS.accent },
+        ].map(({ label, value, chip, chipBorder }) => (
+          <div
+            key={label}
+            style={{
+              background: chip,
+              borderRadius: 12,
+              padding: "14px 16px",
+              border: `1px solid ${chipBorder}`,
+            }}
+          >
+            <div
+              style={{
+                fontSize: 10,
+                color: COLORS.text,
+                opacity: 0.75,
+                fontFamily: FONT_STACK,
+                marginBottom: 4,
+                textTransform: "uppercase",
+                letterSpacing: 1,
+                fontWeight: 700,
+              }}
+            >
+              {label}
+            </div>
+            <div
+              style={{
+                fontSize: 14,
+                fontWeight: 700,
+                color: COLORS.text,
+                fontFamily: FONT_STACK,
+              }}
+            >
+              {value}
+            </div>
           </div>
         ))}
       </div>
 
+      {/* Complexity + step count */}
       <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-        <span style={{
-          padding: "4px 12px", borderRadius: 50, fontSize: 11, fontWeight: 600,
-          background: workflow.complexity === "Advanced" ? `${C.accent}20` : `${C.primary}20`,
-          color: workflow.complexity === "Advanced" ? C.accent : "#60a5fa",
-          border: `1px solid ${workflow.complexity === "Advanced" ? C.accent + "40" : C.primary + "40"}`,
-          fontFamily: "'DM Sans',sans-serif",
-        }}>{workflow.complexity}</span>
-        <span style={{ fontSize: 12, color: C.textMuted, fontFamily: "'DM Sans',sans-serif" }}>
+        <span
+          style={{
+            padding: "4px 12px",
+            borderRadius: 50,
+            fontSize: 11,
+            fontWeight: 700,
+            letterSpacing: 0.6,
+            textTransform: "uppercase",
+            background:
+              workflow.complexity === "Advanced" ? COLORS.accentDim : COLORS.slateBlue,
+            color: COLORS.text,
+            border: `1px solid ${workflow.complexity === "Advanced" ? COLORS.accent : COLORS.slateBlueBorder}`,
+            fontFamily: FONT_STACK,
+          }}
+        >
+          {workflow.complexity}
+        </span>
+        <span
+          style={{
+            fontSize: 12,
+            color: COLORS.textSecondary,
+            fontFamily: MONO_STACK,
+            fontVariantNumeric: "tabular-nums",
+          }}
+        >
           {workflow.nodes.length} steps
         </span>
       </div>
 
+      {/* Apps connected */}
       <div>
-        <div style={{ fontSize: 11, color: C.textMuted, fontFamily: "'DM Sans',sans-serif", marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5 }}>
+        <div
+          style={{
+            fontSize: 11,
+            color: COLORS.textSecondary,
+            fontFamily: FONT_STACK,
+            marginBottom: 8,
+            textTransform: "uppercase",
+            letterSpacing: 1,
+            fontWeight: 700,
+            borderLeft: `3px solid ${COLORS.accent}`,
+            paddingLeft: 8,
+          }}
+        >
           Apps connected
         </div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-          {workflow.apps.map(app => (
-            <span key={app} style={{
-              padding: "4px 12px", borderRadius: 50, fontSize: 11,
-              background: (APP_COLORS[app] || C.secondary) + "20",
-              color: C.textLight, border: `1px solid ${(APP_COLORS[app] || C.secondary)}30`,
-              fontFamily: "'DM Sans',sans-serif",
-            }}>{app}</span>
-          ))}
+          {workflow.apps.map((app) => {
+            const ac = APP_COLORS[app] || COLORS.text;
+            return (
+              <span
+                key={app}
+                style={{
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "4px 10px",
+                  borderRadius: 50,
+                  fontSize: 11,
+                  background: COLORS.cardBgMuted,
+                  color: COLORS.text,
+                  border: `1px solid ${COLORS.borderColor}`,
+                  fontFamily: FONT_STACK,
+                  fontWeight: 600,
+                }}
+              >
+                <span
+                  style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: "50%",
+                    background: ac,
+                    display: "inline-block",
+                  }}
+                />
+                {app}
+              </span>
+            );
+          })}
         </div>
       </div>
 
+      {/* Reliability */}
       {workflow.reliability && (
-        <div style={{
-          background: "rgba(5,150,105,0.06)", borderRadius: 10,
-          padding: "12px 14px", border: "1px solid rgba(5,150,105,0.2)",
-        }}>
-          <div style={{ fontSize: 10, color: "#34D399", fontFamily: "'DM Sans',sans-serif", marginBottom: 8, textTransform: "uppercase", letterSpacing: 0.5, fontWeight: 700 }}>
+        <div
+          style={{
+            background: COLORS.sage,
+            borderRadius: 10,
+            padding: "14px 16px",
+            border: `1px solid ${COLORS.sageBorder}`,
+          }}
+        >
+          <div
+            style={{
+              fontSize: 10,
+              color: COLORS.text,
+              fontFamily: FONT_STACK,
+              marginBottom: 8,
+              textTransform: "uppercase",
+              letterSpacing: 1,
+              fontWeight: 700,
+            }}
+          >
             Reliability &amp; Error Handling
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
@@ -574,36 +1012,99 @@ function WorkflowOverview({ workflow }) {
               { label: "Monitoring", value: workflow.reliability.monitoring },
             ].map(({ label, value }) => (
               <div key={label} style={{ display: "flex", gap: 8, alignItems: "flex-start" }}>
-                <span style={{ fontSize: 10, color: C.textMuted, fontFamily: "'DM Sans',sans-serif", fontWeight: 600, minWidth: 66, paddingTop: 1, textTransform: "uppercase", letterSpacing: 0.5 }}>{label}</span>
-                <span style={{ fontSize: 11.5, color: C.textLight, fontFamily: "'DM Sans',sans-serif", lineHeight: 1.5 }}>{value}</span>
+                <span
+                  style={{
+                    fontSize: 10,
+                    color: COLORS.text,
+                    opacity: 0.75,
+                    fontFamily: FONT_STACK,
+                    fontWeight: 700,
+                    minWidth: 70,
+                    paddingTop: 1,
+                    textTransform: "uppercase",
+                    letterSpacing: 1,
+                  }}
+                >
+                  {label}
+                </span>
+                <span
+                  style={{
+                    fontSize: 12,
+                    color: COLORS.text,
+                    fontFamily: FONT_STACK,
+                    lineHeight: 1.5,
+                  }}
+                >
+                  {value}
+                </span>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      <p style={{ margin: 0, fontSize: 12, color: C.textMuted, fontFamily: "'DM Sans',sans-serif", fontStyle: "italic", marginTop: "auto" }}>
-        Click any step in the diagram to see implementation details
+      <p
+        style={{
+          margin: 0,
+          fontSize: 12,
+          color: COLORS.textSecondary,
+          fontFamily: FONT_STACK,
+          fontStyle: "italic",
+          marginTop: "auto",
+        }}
+      >
+        Click any step in the diagram to see implementation details.
       </p>
     </div>
   );
 }
 
-// ─── Legend ──────────────────────────────────────────────────────────────────
+// ---------------------------------------------------------------------------
+// Legend
+// ---------------------------------------------------------------------------
 function Legend() {
+  const items = [
+    { type: "trigger", label: "Trigger" },
+    { type: "filter", label: "Filter" },
+    { type: "action", label: "Action" },
+    { type: "end", label: "Final step" },
+  ];
   return (
-    <div style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
-      {[
-        { type: "trigger", label: "Trigger"    },
-        { type: "filter",  label: "Filter"     },
-        { type: "action",  label: "Action"     },
-        { type: "end",     label: "Final step" },
-      ].map(({ type, label }) => {
-        const { stroke } = nodeStyle(type);
+    <div
+      style={{
+        display: "flex",
+        gap: 14,
+        flexWrap: "wrap",
+        background: COLORS.cardBg,
+        border: `1px solid ${COLORS.borderColor}`,
+        borderRadius: 10,
+        padding: "10px 14px",
+      }}
+    >
+      {items.map(({ type, label }) => {
+        const { fill, border } = nodeStyle(type);
         return (
           <div key={type} style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <div style={{ width: 10, height: 10, borderRadius: 3, background: stroke, opacity: 0.8 }} />
-            <span style={{ fontSize: 11, color: C.textMuted, fontFamily: "'DM Sans',sans-serif" }}>{label}</span>
+            <div
+              style={{
+                width: 12,
+                height: 12,
+                borderRadius: 3,
+                background: fill,
+                border: `1px solid ${border}`,
+              }}
+            />
+            <span
+              style={{
+                fontSize: 11,
+                color: COLORS.text,
+                fontFamily: FONT_STACK,
+                fontWeight: 600,
+                letterSpacing: 0.3,
+              }}
+            >
+              {label}
+            </span>
           </div>
         );
       })}
@@ -611,116 +1112,214 @@ function Legend() {
   );
 }
 
-// ─── Main Export ─────────────────────────────────────────────────────────────
+// ---------------------------------------------------------------------------
+// Main export
+// ---------------------------------------------------------------------------
 export default function ZapierVisualizer() {
   const [activeId, setActiveId] = useState(WORKFLOWS[0].id);
-  const [selectedNode, setSelectedNode] = useState(null);
+  const [selectedNode, setSelectedNode] = useState(WORKFLOWS[0].nodes[0].id);
 
-  const workflow = WORKFLOWS.find(w => w.id === activeId);
+  const workflow = WORKFLOWS.find((w) => w.id === activeId);
 
   const handleWorkflowChange = useCallback((id) => {
     setActiveId(id);
-    const incoming = WORKFLOWS.find(w => w.id === id);
+    const incoming = WORKFLOWS.find((w) => w.id === id);
     setSelectedNode(incoming?.nodes[0]?.id ?? null);
   }, []);
 
   const handleNodeSelect = useCallback((nodeId) => {
-    setSelectedNode(prev => prev === nodeId ? null : nodeId);
+    setSelectedNode((prev) => (prev === nodeId ? null : nodeId));
   }, []);
 
-  // Default to first node if nothing selected — page always opens on step 1
-  const activeNode = workflow.nodes.find(n => n.id === selectedNode) || workflow.nodes[0];
+  const activeNode = workflow.nodes.find((n) => n.id === selectedNode);
 
   return (
-    <div style={{ background: C.dark, minHeight: "100vh", fontFamily: "'DM Sans', sans-serif" }}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Playfair+Display:wght@600;700&display=swap');
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        ::-webkit-scrollbar { width: 4px; } ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 2px; }
-      `}</style>
-
-      {/* Page Header */}
-      <div style={{ padding: "48px 32px 32px", maxWidth: 1100, margin: "0 auto", borderBottom: `1px solid ${C.border}` }}>
-        <div style={{
-          display: "inline-block", padding: "4px 16px", borderRadius: 50,
-          background: `${C.accent}12`, border: `1px solid ${C.accent}30`,
-          fontSize: 11, color: C.accent, letterSpacing: 2, textTransform: "uppercase", marginBottom: 16,
-        }}>
-          Automation Portfolio
-        </div>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", flexWrap: "wrap", gap: 16 }}>
+    <div
+      style={{
+        background: COLORS.background,
+        minHeight: "100vh",
+        fontFamily: FONT_STACK,
+        color: COLORS.text,
+        padding: "24px 16px 48px",
+      }}
+    >
+      <div
+        style={{
+          background: COLORS.cardBg,
+          color: COLORS.text,
+          fontFamily: FONT_STACK,
+          padding: 24,
+          borderRadius: 12,
+          border: `1px solid ${COLORS.borderColor}`,
+          boxShadow: "0 1px 2px rgba(63, 78, 100, 0.04), 0 8px 24px rgba(63, 78, 100, 0.06)",
+          maxWidth: 1100,
+          margin: "0 auto",
+          minHeight: 640,
+        }}
+      >
+        {/* Header — standardized Portfolio Piece pattern */}
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "flex-end",
+            marginBottom: 18,
+            flexWrap: "wrap",
+            gap: 16,
+          }}
+        >
           <div>
-            <h1 style={{
-              fontFamily: "'Playfair Display', serif", fontSize: "clamp(26px, 4vw, 40px)",
-              fontWeight: 700, color: C.white, lineHeight: 1.15, marginBottom: 10,
-            }}>
-              Zapier Workflow{" "}
-              <span style={{ background: `linear-gradient(135deg, ${C.accent}, #c084fc)`, WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>
-                Visualizer
-              </span>
-            </h1>
-            <p style={{ fontSize: 15, color: C.textMuted, maxWidth: 560, lineHeight: 1.7 }}>
-              4 production-ready automations I've designed and deployed. Click any step to explore implementation logic and time saved.
-            </p>
+            <div
+              style={{
+                fontSize: 11,
+                color: COLORS.textSecondary,
+                letterSpacing: 2,
+                textTransform: "uppercase",
+                fontWeight: 700,
+                borderLeft: `3px solid ${COLORS.accent}`,
+                paddingLeft: 8,
+              }}
+            >
+              Portfolio Piece · Automation Design
+            </div>
+            <div style={{ fontSize: 22, fontWeight: 700, marginTop: 4 }}>
+              Zapier Workflow Visualizer
+            </div>
+            <div
+              style={{
+                fontSize: 12,
+                color: COLORS.textSecondary,
+                marginTop: 4,
+                maxWidth: 640,
+              }}
+            >
+              Four production-ready automations I've designed and deployed — each one
+              collapses hours of manual EA work into a single reliable flow. Click any
+              step to see the implementation logic and time saved.
+            </div>
           </div>
-          <div style={{ display: "flex", gap: 24 }}>
+
+          {/* KPI cluster — mono numerals, muted labels */}
+          <div style={{ display: "flex", gap: 18, flexWrap: "wrap" }}>
             {[
-              { value: "13+", label: "hrs saved/week" },
-              { value: "4",   label: "live workflows"  },
-              { value: "24",  label: "automated steps" },
+              { value: "13+", label: "hrs saved / week" },
+              { value: "4", label: "live workflows" },
+              { value: "24", label: "automated steps" },
             ].map(({ value, label }) => (
-              <div key={label} style={{ textAlign: "center" }}>
-                <div style={{
-                  fontFamily: "'Playfair Display', serif", fontSize: 28, fontWeight: 700,
-                  background: `linear-gradient(135deg, ${C.accent}, #c084fc)`,
-                  WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
-                }}>{value}</div>
-                <div style={{ fontSize: 11, color: C.textMuted, marginTop: 2 }}>{label}</div>
+              <div
+                key={label}
+                style={{
+                  background: COLORS.cardBgMuted,
+                  border: `1px solid ${COLORS.borderColor}`,
+                  borderRadius: 10,
+                  padding: "10px 14px",
+                  minWidth: 92,
+                  textAlign: "left",
+                }}
+              >
+                <div
+                  style={{
+                    fontFamily: MONO_STACK,
+                    fontSize: 22,
+                    fontWeight: 700,
+                    color: COLORS.text,
+                    fontVariantNumeric: "tabular-nums",
+                    lineHeight: 1.1,
+                  }}
+                >
+                  {value}
+                </div>
+                <div
+                  style={{
+                    fontSize: 10,
+                    color: COLORS.textSecondary,
+                    marginTop: 2,
+                    textTransform: "uppercase",
+                    letterSpacing: 1,
+                    fontWeight: 700,
+                  }}
+                >
+                  {label}
+                </div>
               </div>
             ))}
           </div>
         </div>
-      </div>
 
-      {/* Workflow tabs */}
-      <div style={{
-        padding: "0 32px", maxWidth: 1100, margin: "0 auto",
-        borderBottom: `1px solid ${C.border}`,
-        display: "flex", gap: 4, overflowX: "auto",
-      }}>
-        {WORKFLOWS.map(w => (
-          <button key={w.id} onClick={() => handleWorkflowChange(w.id)} style={{
-            padding: "14px 20px", background: "none",
-            border: "none", borderBottom: `2px solid ${activeId === w.id ? C.accent : "transparent"}`,
-            color: activeId === w.id ? C.white : C.textMuted,
-            cursor: "pointer", fontFamily: "'DM Sans',sans-serif",
-            fontSize: 13, fontWeight: activeId === w.id ? 600 : 400,
-            whiteSpace: "nowrap", transition: "all 0.2s",
-          }}>
-            <span style={{ marginRight: 6 }}>{w.icon}</span>{w.title}
-          </button>
-        ))}
-      </div>
-
-      {/* Main 2-col layout */}
-      <div style={{
-        maxWidth: 1100, margin: "0 auto", padding: "32px 32px 64px",
-        display: "grid", gridTemplateColumns: "270px 1fr",
-        gap: 24, alignItems: "start",
-      }}>
-        {/* Left: flowchart */}
-        <div>
-          <div style={{ marginBottom: 16 }}><Legend /></div>
-          <FlowChart workflow={workflow} selectedNode={selectedNode} onSelect={handleNodeSelect} />
+        {/* Workflow tabs */}
+        <div
+          style={{
+            display: "flex",
+            gap: 4,
+            overflowX: "auto",
+            padding: 4,
+            background: COLORS.cardBg,
+            border: `1px solid ${COLORS.borderColor}`,
+            borderRadius: 8,
+            marginBottom: 20,
+            width: "fit-content",
+            maxWidth: "100%",
+          }}
+        >
+          {WORKFLOWS.map((w) => {
+            const isActive = activeId === w.id;
+            return (
+              <button
+                key={w.id}
+                onClick={() => handleWorkflowChange(w.id)}
+                style={{
+                  background: isActive ? COLORS.accentDim : "transparent",
+                  color: isActive ? COLORS.text : COLORS.textSecondary,
+                  border: isActive
+                    ? `1px solid ${COLORS.accent}`
+                    : "1px solid transparent",
+                  borderRadius: 6,
+                  padding: "8px 14px",
+                  fontSize: 12,
+                  fontWeight: 700,
+                  letterSpacing: 0.6,
+                  cursor: "pointer",
+                  textTransform: "uppercase",
+                  whiteSpace: "nowrap",
+                  fontFamily: FONT_STACK,
+                  transition:
+                    "background 150ms ease, color 150ms ease, border-color 150ms ease",
+                }}
+              >
+                <span style={{ marginRight: 6 }}>{w.icon}</span>
+                {w.title}
+              </button>
+            );
+          })}
         </div>
 
-        {/* Right: detail or overview */}
-        <div style={{ position: "sticky", top: 24 }}>
-          {activeNode
-            ? <NodeDetail node={activeNode} onClose={() => setSelectedNode(null)} />
-            : <WorkflowOverview workflow={workflow} />
-          }
+        {/* Main 2-col layout */}
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "minmax(260px, 290px) 1fr",
+            gap: 20,
+            alignItems: "start",
+          }}
+        >
+          {/* Left: legend + flowchart */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+            <Legend />
+            <FlowChart
+              workflow={workflow}
+              selectedNode={selectedNode}
+              onSelect={handleNodeSelect}
+            />
+          </div>
+
+          {/* Right: detail or overview */}
+          <div style={{ position: "sticky", top: 24 }}>
+            {activeNode ? (
+              <NodeDetail node={activeNode} onClose={() => setSelectedNode(null)} />
+            ) : (
+              <WorkflowOverview workflow={workflow} />
+            )}
+          </div>
         </div>
       </div>
     </div>
