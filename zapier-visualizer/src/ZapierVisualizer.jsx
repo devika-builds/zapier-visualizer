@@ -3,44 +3,46 @@ import React, { useState, useCallback } from "react";
 // ---------------------------------------------------------------------------
 // Zapier Workflow Visualizer
 // Single-file React component designed to embed alongside the rest of the
-// portfolio. Styled in the shared Mineral & Paper Executive Light Mode palette
+// portfolio. Styled in the shared Heritage Silver Executive Light Mode palette
 // to match the Executive Assistant Control Center. Inline styles only, no libs.
 // ---------------------------------------------------------------------------
 
-// Mineral & Paper — Executive Light Mode palette (identical to EA Control Center)
+// Heritage Silver — Executive Light Mode palette (identical to EA Control Center)
+// Token names preserved for stability; sage now holds Little Boy Blue and
+// slateBlue now holds Thistle pastel.
 const COLORS = {
   // Surfaces
-  background: "#EEE4D3",      // Light Beige Linen — body
-  cardBg: "#FDFEFA",          // Paper White — primary cards
-  cardBgMuted: "#F5ECD9",     // Warm linen — nested surfaces / filter chips
+  background: "#E4EAF0",      // Platinum mist — body
+  cardBg: "#FAFBFD",          // Silk White — primary cards
+  cardBgMuted: "#EEF1F5",     // Cool ash — nested surfaces / filter chips
 
   // Typography & borders
-  text: "#3F4E64",            // Charcoal Slate — primary text
-  textSecondary: "#6B7385",   // Muted slate — metadata, hints
-  borderColor: "rgba(63, 78, 100, 0.14)",
-  borderStrong: "rgba(63, 78, 100, 0.32)",
+  text: "#2A3547",            // Navy Ink — primary text (~12:1 on Silk White)
+  textSecondary: "#5E6B80",   // Mid slate — metadata, hints
+  borderColor: "rgba(42, 53, 71, 0.14)",
+  borderStrong: "rgba(42, 53, 71, 0.32)",
 
   // Accent (primary / active)
-  accent: "#C39E6D",          // Antique Brass
-  accentDim: "rgba(195, 158, 109, 0.18)",
+  accent: "#6B7FAB",          // Liberty Blue — dusty periwinkle
+  accentDim: "rgba(107, 127, 171, 0.18)",
 
   // Critical / blocking
-  critical: "#EFD5CE",
-  criticalBorder: "rgba(176, 90, 70, 0.55)",
-  criticalText: "#A85C4A",
+  critical: "#E6D4E1",
+  criticalBorder: "rgba(140, 94, 127, 0.55)",
+  criticalText: "#8C5E7F",    // Deep Thistle (~5.07:1 on white)
 
-  // Pastel status tokens — WCAG AA with charcoal text
-  sage: "#BDCBB8",            // IN PROGRESS / END (~5.0:1)
-  sageBorder: "rgba(115, 139, 106, 0.55)",
-  sageText: "#5C7048",        // Readable sage for small icons
-  slateBlue: "#B9CAD3",       // Informational / TRIGGER (~5.0:1)
-  slateBlueBorder: "rgba(92, 126, 142, 0.55)",
-  slateBlueText: "#3F5A6B",
+  // Pastel status tokens — cool register, AA with Navy Ink
+  sage: "#B5C3DA",            // Little Boy Blue — IN PROGRESS / END (~6.9:1)
+  sageBorder: "rgba(74, 106, 148, 0.55)",
+  sageText: "#2F4B6E",        // Readable deep blue for small icons
+  slateBlue: "#C4CDE3",       // Thistle pastel — Informational / TRIGGER (~7.5:1)
+  slateBlueBorder: "rgba(107, 127, 171, 0.55)",
+  slateBlueText: "#5B4D75",   // Readable deep thistle
 
   // Semantic aliases
-  success: "#BDCBB8",
-  warning: "#C39E6D",
-  error: "#A85C4A",
+  success: "#B5C3DA",
+  warning: "#6B7FAB",
+  error: "#8C5E7F",
 };
 
 const FONT_STACK =
@@ -49,13 +51,13 @@ const MONO_STACK =
   "'JetBrains Mono', 'Geist Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace";
 
 // ---------------------------------------------------------------------------
-// Node-type semantic map — each node type maps to a Mineral & Paper pastel
-// with its own border color. Text on all of these is charcoal (COLORS.text).
+// Node-type semantic map — each node type maps to a Heritage Silver pastel
+// with its own border color. Text on all of these is Navy Ink (COLORS.text).
 // ---------------------------------------------------------------------------
 const NODE_STYLES = {
   trigger: {
     fill: COLORS.slateBlue,
-    border: "#5C7E8E",
+    border: "#7C6E9C",
     label: "TRIGGER",
   },
   filter: {
@@ -70,12 +72,12 @@ const NODE_STYLES = {
   },
   end: {
     fill: COLORS.sage,
-    border: "#738B6A",
+    border: "#4A6A94",
     label: "FINAL",
   },
 };
 
-// Muted app color palette — chosen to read well on cream/paper surfaces while
+// Muted app color palette — chosen to read well on Platinum/Silk surfaces while
 // still being visually distinct. All app badges use white text.
 const APP_COLORS = {
   Typeform: "#2D2D2D",
@@ -87,9 +89,9 @@ const APP_COLORS = {
   Calendly: "#3B6EC4",
   "Google Sheets": "#2F8B4F",
   "Google Drive": "#3B6EC4",
-  "Claude AI": "#C39E6D",
+  "Claude AI": "#6B7FAB",
   Zapier: "#C65A3A",
-  Notion: "#3F4E64",
+  Notion: "#2A3547",
 };
 
 const APP_INIT = {
@@ -400,7 +402,11 @@ function FlowNode({ node, index, selected, onClick }) {
   const { fill, border, label } = nodeStyle(node.type);
   const isSel = selected === node.id;
   return (
-    <g onClick={() => onClick(node.id)} style={{ cursor: "pointer" }}>
+    <g
+      className={`zv-fnode ${isSel ? "zv-fnode-active" : ""}`}
+      onClick={() => onClick(node.id)}
+      style={{ cursor: "pointer" }}
+    >
       {isSel && (
         <rect
           x={x - 3}
@@ -415,6 +421,7 @@ function FlowNode({ node, index, selected, onClick }) {
         />
       )}
       <rect
+        className="zv-fnode-main"
         x={x}
         y={y}
         width={NODE_W}
@@ -506,7 +513,7 @@ function FlowChart({ workflow, selectedNode, onSelect }) {
         border: `1px solid ${COLORS.borderColor}`,
         borderRadius: 12,
         padding: 8,
-        boxShadow: "0 1px 2px rgba(63, 78, 100, 0.04), 0 8px 24px rgba(63, 78, 100, 0.06)",
+        boxShadow: "0 1px 2px rgba(42, 53, 71, 0.04), 0 8px 24px rgba(42, 53, 71, 0.06)",
       }}
     >
       <svg width={canvasW} height={canvasH} style={{ display: "block" }}>
@@ -535,6 +542,7 @@ function NodeDetail({ node, onClose }) {
   const appColor = APP_COLORS[node.app] || COLORS.text;
   return (
     <div
+      className="zv-card"
       style={{
         background: COLORS.cardBg,
         border: `1px solid ${COLORS.borderColor}`,
@@ -546,7 +554,7 @@ function NodeDetail({ node, onClose }) {
         gap: 18,
         fontFamily: FONT_STACK,
         color: COLORS.text,
-        boxShadow: "0 1px 2px rgba(63, 78, 100, 0.04), 0 8px 24px rgba(63, 78, 100, 0.06)",
+        boxShadow: "0 1px 2px rgba(42, 53, 71, 0.04), 0 8px 24px rgba(42, 53, 71, 0.06)",
       }}
     >
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
@@ -598,6 +606,7 @@ function NodeDetail({ node, onClose }) {
           </h3>
         </div>
         <button
+          className="zv-close zv-btn"
           onClick={onClose}
           style={{
             background: COLORS.cardBgMuted,
@@ -709,6 +718,7 @@ function NodeDetail({ node, onClose }) {
           {node.dataUsed.map((d, i) => (
             <span
               key={i}
+              className="zv-chip"
               style={{
                 padding: "3px 10px",
                 borderRadius: 50,
@@ -815,6 +825,7 @@ function NodeDetail({ node, onClose }) {
 function WorkflowOverview({ workflow }) {
   return (
     <div
+      className="zv-card"
       style={{
         background: COLORS.cardBg,
         border: `1px solid ${COLORS.borderColor}`,
@@ -826,7 +837,7 @@ function WorkflowOverview({ workflow }) {
         gap: 20,
         fontFamily: FONT_STACK,
         color: COLORS.text,
-        boxShadow: "0 1px 2px rgba(63, 78, 100, 0.04), 0 8px 24px rgba(63, 78, 100, 0.06)",
+        boxShadow: "0 1px 2px rgba(42, 53, 71, 0.04), 0 8px 24px rgba(42, 53, 71, 0.06)",
       }}
     >
       <div>
@@ -952,6 +963,7 @@ function WorkflowOverview({ workflow }) {
             return (
               <span
                 key={app}
+                className="zv-chip"
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
@@ -1143,6 +1155,56 @@ export default function ZapierVisualizer() {
         padding: "24px 16px 48px",
       }}
     >
+      {/* Interaction polish — palette locked, motion only */}
+      <style>{`
+        .zv-card {
+          transition: transform 220ms cubic-bezier(.2,.7,.2,1), box-shadow 220ms ease, border-color 180ms ease;
+          will-change: transform;
+        }
+        .zv-card:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 2px 4px rgba(42,53,71,0.06), 0 14px 32px rgba(42,53,71,0.10);
+        }
+        .zv-kpi {
+          transition: transform 180ms cubic-bezier(.2,.7,.2,1), box-shadow 180ms ease, border-color 150ms ease;
+        }
+        .zv-kpi:hover {
+          transform: translateY(-1px);
+          box-shadow: 0 1px 2px rgba(42,53,71,0.06), 0 6px 14px rgba(42,53,71,0.08);
+          border-color: rgba(107,127,171,0.5);
+        }
+        .zv-tab { transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease; }
+        .zv-tab:hover:not(.zv-tab-active) {
+          background: rgba(107,127,171,0.08);
+          color: #2A3547;
+          border-color: rgba(107,127,171,0.35);
+        }
+        .zv-btn { transition: transform 120ms ease; }
+        .zv-btn:active { transform: scale(0.98); }
+        .zv-btn:focus-visible { outline: 2px solid #6B7FAB; outline-offset: 2px; border-radius: 6px; }
+        .zv-close { transition: background-color 150ms ease, border-color 150ms ease; }
+        .zv-close:hover { background: #E4EAF0; border-color: rgba(42,53,71,0.32); }
+        .zv-chip { transition: background-color 150ms ease, border-color 150ms ease, transform 150ms ease; }
+        .zv-chip:hover {
+          background: rgba(107,127,171,0.12);
+          border-color: rgba(107,127,171,0.4);
+        }
+        /* SVG flow nodes */
+        .zv-fnode .zv-fnode-main {
+          transition: stroke 180ms ease, stroke-width 180ms ease;
+        }
+        .zv-fnode:hover:not(.zv-fnode-active) .zv-fnode-main {
+          stroke: #6B7FAB;
+          stroke-width: 1.25;
+        }
+        /* Respect reduced motion */
+        @media (prefers-reduced-motion: reduce) {
+          .zv-card, .zv-kpi, .zv-tab, .zv-btn, .zv-close, .zv-chip, .zv-fnode .zv-fnode-main {
+            transition: none !important;
+          }
+          .zv-card:hover, .zv-kpi:hover { transform: none !important; }
+        }
+      `}</style>
       <div
         style={{
           background: COLORS.cardBg,
@@ -1151,7 +1213,7 @@ export default function ZapierVisualizer() {
           padding: 24,
           borderRadius: 12,
           border: `1px solid ${COLORS.borderColor}`,
-          boxShadow: "0 1px 2px rgba(63, 78, 100, 0.04), 0 8px 24px rgba(63, 78, 100, 0.06)",
+          boxShadow: "0 1px 2px rgba(42, 53, 71, 0.04), 0 8px 24px rgba(42, 53, 71, 0.06)",
           maxWidth: 1100,
           margin: "0 auto",
           minHeight: 640,
@@ -1208,6 +1270,7 @@ export default function ZapierVisualizer() {
             ].map(({ value, label }) => (
               <div
                 key={label}
+                className="zv-kpi"
                 style={{
                   background: COLORS.cardBgMuted,
                   border: `1px solid ${COLORS.borderColor}`,
@@ -1266,6 +1329,7 @@ export default function ZapierVisualizer() {
             return (
               <button
                 key={w.id}
+                className={`zv-tab zv-btn ${isActive ? "zv-tab-active" : ""}`}
                 onClick={() => handleWorkflowChange(w.id)}
                 style={{
                   background: isActive ? COLORS.accentDim : "transparent",
@@ -1282,8 +1346,6 @@ export default function ZapierVisualizer() {
                   textTransform: "uppercase",
                   whiteSpace: "nowrap",
                   fontFamily: FONT_STACK,
-                  transition:
-                    "background 150ms ease, color 150ms ease, border-color 150ms ease",
                 }}
               >
                 <span style={{ marginRight: 6 }}>{w.icon}</span>
