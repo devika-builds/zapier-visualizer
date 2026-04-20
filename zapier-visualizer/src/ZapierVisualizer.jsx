@@ -18,7 +18,7 @@ const COLORS = {
 
   // Typography & borders
   text: "#2A3547",            // Navy Ink — primary text (~12:1 on Silk White)
-  textSecondary: "#5E6B80",   // Mid slate — metadata, hints
+  textSecondary: "#566175",   // Mid slate — metadata, hints (~5.0:1 on Platinum body, AA)
   borderColor: "rgba(42, 53, 71, 0.14)",
   borderStrong: "rgba(42, 53, 71, 0.32)",
 
@@ -401,11 +401,22 @@ function FlowNode({ node, index, selected, onClick }) {
   const y = CANVAS_PAD + index * (NODE_H + NODE_GAP);
   const { fill, border, label } = nodeStyle(node.type);
   const isSel = selected === node.id;
+  const activate = () => onClick(node.id);
   return (
     <g
       className={`zv-fnode ${isSel ? "zv-fnode-active" : ""}`}
-      onClick={() => onClick(node.id)}
-      style={{ cursor: "pointer" }}
+      role="button"
+      tabIndex={0}
+      aria-label={`${label}: ${node.title || node.id}`}
+      aria-pressed={isSel}
+      onClick={activate}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          activate();
+        }
+      }}
+      style={{ cursor: "pointer", outline: "none" }}
     >
       {isSel && (
         <rect
@@ -1196,6 +1207,12 @@ export default function ZapierVisualizer() {
         .zv-fnode:hover:not(.zv-fnode-active) .zv-fnode-main {
           stroke: #6B7FAB;
           stroke-width: 1.25;
+        }
+        /* Keyboard focus ring for flow nodes (SVG-safe) */
+        .zv-fnode:focus-visible .zv-fnode-main {
+          stroke: #6B7FAB;
+          stroke-width: 2.5;
+          filter: drop-shadow(0 0 0 2px rgba(107,127,171,0.35));
         }
         /* Respect reduced motion */
         @media (prefers-reduced-motion: reduce) {
