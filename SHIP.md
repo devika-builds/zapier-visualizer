@@ -25,7 +25,7 @@ git push -u origin main
 
 Git Credential Manager will prompt for GitHub auth in the browser (same flow as the job-tracker and EA Control Center repos). Approve it — push takes ~5 seconds.
 
-Two commits go up together: the initial scaffold and the portfolio shell redesign.
+Three commits go up together: the initial scaffold, the portfolio shell redesign, and this SHIP.md.
 
 ## 3. Deploy on Vercel
 
@@ -46,6 +46,7 @@ After the first deploy, subsequent commits to `main` auto-deploy — so if you p
 ## Current commits
 
 ```
+2962f20 Document shell redesign in SHIP.md
 8d24563 Add editorial portfolio shell
 281c76d Initial commit: Zapier Workflow Visualizer
 ```
