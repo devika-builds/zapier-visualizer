@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect, useRef } from "react";
 
 // ---------------------------------------------------------------------------
 // Zapier Workflow Visualizer
@@ -1259,9 +1259,10 @@ function Legend() {
 }
 
 // ---------------------------------------------------------------------------
-// Main export
+// Core demo (renamed from the former default export). The shell at the bottom
+// of this file wraps this component in the editorial portfolio layout.
 // ---------------------------------------------------------------------------
-export default function ZapierVisualizer() {
+function ZapierVisualizerCore() {
   const [activeId, setActiveId] = useState(WORKFLOWS[0].id);
   const [selectedNode, setSelectedNode] = useState(WORKFLOWS[0].nodes[0].id);
 
@@ -1282,11 +1283,10 @@ export default function ZapierVisualizer() {
   return (
     <div
       style={{
-        background: COLORS.background,
-        minHeight: "100vh",
+        background: "transparent",
         fontFamily: FONT_STACK,
         color: COLORS.text,
-        padding: "24px 16px 48px",
+        padding: 0,
       }}
     >
       {/* Interaction polish — palette locked, motion only */}
@@ -1534,6 +1534,936 @@ export default function ZapierVisualizer() {
           </div>
         </div>
       </div>
+    </div>
+  );
+}
+
+// ===========================================================================
+// Editorial Portfolio Shell
+// Wraps the demo in a magazine-style layout: sticky nav → hero → metrics →
+// framed live demo → case study narrative → next-piece footer CTA. Plus a
+// keyboard shortcut overlay (press ?) and a persistent kbd hint.
+// ===========================================================================
+
+const SHELL = { maxW: 1200 };
+
+// Count up from 0 to value when the element scrolls into view. Respects
+// prefers-reduced-motion (jumps straight to the final value).
+function AnimatedCounter({ value, suffix = "", duration = 1400 }) {
+  const [display, setDisplay] = useState(0);
+  const [done, setDone] = useState(false);
+  const ref = useRef(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || done) return;
+    const reduced = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    if (reduced) {
+      setDisplay(value);
+      setDone(true);
+      return;
+    }
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting && !done) {
+          setDone(true);
+          const start = performance.now();
+          const tick = (now) => {
+            const t = Math.min(1, (now - start) / duration);
+            const eased = 1 - Math.pow(1 - t, 3);
+            setDisplay(Math.floor(value * eased));
+            if (t < 1) requestAnimationFrame(tick);
+            else setDisplay(value);
+          };
+          requestAnimationFrame(tick);
+          io.disconnect();
+        }
+      },
+      { threshold: 0.4 }
+    );
+    if (ref.current) io.observe(ref.current);
+    return () => io.disconnect();
+  }, [value, duration, done]);
+
+  return (
+    <span ref={ref}>
+      {display}
+      {suffix}
+    </span>
+  );
+}
+
+function ShellTopNav() {
+  return (
+    <nav
+      role="navigation"
+      aria-label="Portfolio navigation"
+      style={{
+        position: "sticky",
+        top: 0,
+        zIndex: 50,
+        background: "rgba(250, 251, 253, 0.88)",
+        backdropFilter: "saturate(180%) blur(12px)",
+        WebkitBackdropFilter: "saturate(180%) blur(12px)",
+        borderBottom: `1px solid ${COLORS.borderColor}`,
+        fontFamily: FONT_STACK,
+      }}
+    >
+      <div
+        style={{
+          maxWidth: SHELL.maxW,
+          margin: "0 auto",
+          padding: "14px 24px",
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          gap: 16,
+        }}
+      >
+        <a
+          href="#top"
+          aria-label="Devika Ramkaran — back to top"
+          style={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 10,
+            color: COLORS.text,
+            textDecoration: "none",
+            fontWeight: 700,
+            fontSize: 14,
+            letterSpacing: 0.2,
+          }}
+        >
+          <span
+            aria-hidden="true"
+            style={{
+              width: 26,
+              height: 26,
+              borderRadius: 7,
+              background: COLORS.accent,
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              color: "#FFFFFF",
+              fontSize: 11,
+              fontWeight: 800,
+              letterSpacing: 0.5,
+            }}
+          >
+            DR
+          </span>
+          <span className="zv-nav-brand-name">Devika Ramkaran</span>
+        </a>
+        <div style={{ display: "flex", gap: 4, alignItems: "center" }}>
+          <a href="#demo" className="zv-nav-link">Demo</a>
+          <a href="#case-study" className="zv-nav-link">Case study</a>
+          <a
+            href="mailto:vikkir29@gmail.com"
+            style={{
+              padding: "8px 16px",
+              borderRadius: 8,
+              background: COLORS.accent,
+              color: "#FFFFFF",
+              textDecoration: "none",
+              fontSize: 13,
+              fontWeight: 700,
+              marginLeft: 6,
+              fontFamily: FONT_STACK,
+            }}
+          >
+            Contact →
+          </a>
+        </div>
+      </div>
+    </nav>
+  );
+}
+
+function ShellHero() {
+  const stack = ["React", "Vite", "SVG", "Inline-CSS", "A11y"];
+  return (
+    <header
+      id="top"
+      style={{
+        maxWidth: SHELL.maxW,
+        margin: "0 auto",
+        padding: "80px 24px 40px",
+        fontFamily: FONT_STACK,
+      }}
+    >
+      <div
+        style={{
+          fontSize: 11,
+          color: COLORS.textSecondary,
+          letterSpacing: 2.2,
+          textTransform: "uppercase",
+          fontWeight: 700,
+          borderLeft: `3px solid ${COLORS.accent}`,
+          paddingLeft: 10,
+          marginBottom: 18,
+        }}
+      >
+        Portfolio · Automation Design
+      </div>
+      <h1
+        className="zv-hero-headline"
+        style={{
+          margin: 0,
+          fontSize: 44,
+          fontWeight: 700,
+          color: COLORS.text,
+          lineHeight: 1.1,
+          letterSpacing: -0.5,
+          maxWidth: 860,
+        }}
+      >
+        Four production-ready automations,{" "}
+        <span style={{ color: COLORS.accent }}>visualized end-to-end</span>.
+      </h1>
+      <p
+        style={{
+          fontSize: 18,
+          color: COLORS.textSecondary,
+          lineHeight: 1.55,
+          maxWidth: 680,
+          marginTop: 20,
+          marginBottom: 28,
+        }}
+      >
+        The actual Zapier workflows I've designed, deployed, and monitored as an
+        executive assistant — collapsing hours of manual work into reliable flows.
+        Click any node to see the trigger, data used, time saved, and setup time.
+      </p>
+      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 30 }}>
+        {stack.map((s) => (
+          <span
+            key={s}
+            className="zv-stack-chip"
+            style={{
+              fontSize: 12,
+              fontWeight: 600,
+              color: COLORS.textSecondary,
+              background: COLORS.cardBg,
+              border: `1px solid ${COLORS.borderColor}`,
+              borderRadius: 20,
+              padding: "6px 12px",
+              fontFamily: MONO_STACK,
+              letterSpacing: 0.3,
+            }}
+          >
+            {s}
+          </span>
+        ))}
+      </div>
+      <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+        <a
+          href="#demo"
+          style={{
+            padding: "12px 20px",
+            borderRadius: 9,
+            background: COLORS.accent,
+            color: "#FFFFFF",
+            textDecoration: "none",
+            fontSize: 14,
+            fontWeight: 700,
+            letterSpacing: 0.2,
+            fontFamily: FONT_STACK,
+          }}
+        >
+          Explore the demo ↓
+        </a>
+        <a
+          href="#case-study"
+          style={{
+            padding: "12px 20px",
+            borderRadius: 9,
+            background: "transparent",
+            color: COLORS.text,
+            textDecoration: "none",
+            fontSize: 14,
+            fontWeight: 700,
+            border: `1px solid ${COLORS.borderStrong}`,
+            letterSpacing: 0.2,
+            fontFamily: FONT_STACK,
+          }}
+        >
+          Read the case study
+        </a>
+      </div>
+    </header>
+  );
+}
+
+function ShellMetricsBand() {
+  const metrics = [
+    { value: 13, suffix: "+", unit: "hrs saved / week", hero: true, hint: "conservative estimate, compounds weekly" },
+    { value: 4, suffix: "", unit: "live workflows", hint: "all in production today" },
+    { value: 24, suffix: "", unit: "automated steps", hint: "across 12 connected apps" },
+  ];
+  return (
+    <section
+      aria-label="Impact metrics"
+      style={{
+        background: COLORS.text,
+        color: COLORS.cardBg,
+        padding: "48px 24px",
+        fontFamily: FONT_STACK,
+        marginTop: 8,
+      }}
+    >
+      <div
+        className="zv-metrics-grid"
+        style={{
+          maxWidth: SHELL.maxW,
+          margin: "0 auto",
+          display: "grid",
+          gridTemplateColumns: "2fr 1fr 1fr",
+          gap: 40,
+          alignItems: "end",
+        }}
+      >
+        {metrics.map((m) => (
+          <div key={m.unit}>
+            <div
+              style={{
+                fontFamily: MONO_STACK,
+                fontSize: m.hero ? 78 : 56,
+                fontWeight: 800,
+                lineHeight: 1,
+                color: m.hero ? COLORS.cardBg : "rgba(250, 251, 253, 0.78)",
+                letterSpacing: -2,
+                fontVariantNumeric: "tabular-nums",
+              }}
+            >
+              <AnimatedCounter value={m.value} suffix={m.suffix} />
+            </div>
+            <div
+              style={{
+                fontSize: m.hero ? 15 : 13,
+                color: "rgba(250, 251, 253, 0.72)",
+                marginTop: 12,
+                textTransform: "uppercase",
+                letterSpacing: 1.2,
+                fontWeight: 700,
+              }}
+            >
+              {m.unit}
+            </div>
+            <div
+              style={{
+                fontSize: 12,
+                color: "rgba(250, 251, 253, 0.52)",
+                marginTop: 6,
+                lineHeight: 1.4,
+              }}
+            >
+              {m.hint}
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+function ShellDemoFrame({ children }) {
+  return (
+    <section
+      id="demo"
+      aria-label="Live demo"
+      style={{
+        maxWidth: SHELL.maxW,
+        margin: "0 auto",
+        padding: "72px 24px 40px",
+        fontFamily: FONT_STACK,
+      }}
+    >
+      <div style={{ marginBottom: 20 }}>
+        <div
+          style={{
+            fontSize: 11,
+            color: COLORS.textSecondary,
+            letterSpacing: 2,
+            textTransform: "uppercase",
+            fontWeight: 700,
+            borderLeft: `3px solid ${COLORS.accent}`,
+            paddingLeft: 10,
+          }}
+        >
+          Live demo
+        </div>
+        <h2
+          style={{
+            fontSize: 28,
+            fontWeight: 700,
+            margin: "8px 0 6px",
+            letterSpacing: -0.3,
+            color: COLORS.text,
+          }}
+        >
+          Click through every step
+        </h2>
+        <p
+          style={{
+            fontSize: 15,
+            color: COLORS.textSecondary,
+            margin: 0,
+            maxWidth: 680,
+            lineHeight: 1.55,
+          }}
+        >
+          Tab or click to explore. Each node shows the exact trigger, data used,
+          time saved, and setup time — the way I'd hand it off.
+        </p>
+      </div>
+      <div
+        className="zv-demo-frame"
+        style={{
+          background: COLORS.cardBg,
+          borderRadius: 14,
+          border: `1px solid ${COLORS.borderColor}`,
+          overflow: "hidden",
+          boxShadow:
+            "0 1px 2px rgba(42,53,71,0.06), 0 18px 40px rgba(42,53,71,0.08), 0 40px 80px rgba(42,53,71,0.06)",
+        }}
+      >
+        <div
+          aria-hidden="true"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            padding: "12px 16px",
+            background: COLORS.cardBgMuted,
+            borderBottom: `1px solid ${COLORS.borderColor}`,
+          }}
+        >
+          <span style={{ display: "flex", gap: 6 }}>
+            <span style={{ width: 11, height: 11, borderRadius: "50%", background: "#E6D4E1" }} />
+            <span style={{ width: 11, height: 11, borderRadius: "50%", background: "#C4CDE3" }} />
+            <span style={{ width: 11, height: 11, borderRadius: "50%", background: "#B5C3DA" }} />
+          </span>
+          <span
+            style={{
+              fontFamily: MONO_STACK,
+              fontSize: 11,
+              color: COLORS.textSecondary,
+              background: COLORS.cardBg,
+              borderRadius: 6,
+              padding: "4px 10px",
+              border: `1px solid ${COLORS.borderColor}`,
+              flex: 1,
+              maxWidth: 360,
+              textAlign: "center",
+            }}
+          >
+            zapier-visualizer.vercel.app
+          </span>
+        </div>
+        <div style={{ padding: "24px 20px 28px" }}>{children}</div>
+      </div>
+    </section>
+  );
+}
+
+function ShellCaseStudy() {
+  const sections = [
+    {
+      id: "problem",
+      title: "The problem",
+      body:
+        "Every executive I've worked with has the same bottleneck: the admin work that keeps the business running eats the hours that should go to strategic work. Lead intake, meeting screening, expense filing, weekly briefings — they all follow patterns, but no one has the time to sit down and map those patterns into reliable automation.",
+    },
+    {
+      id: "approach",
+      title: "My approach",
+      body:
+        "I built each workflow to solve one specific pain, then turned them into a portfolio. Every flow shows the trigger, the data it moves, the AI or decision step, the fail-safe, and the measurable hour recovery. The visualizer exists because seeing a flow is faster than reading a spec — and because every hiring manager asks the same thing: show me how you think about systems.",
+    },
+    {
+      id: "decisions",
+      title: "Technical decisions",
+      body:
+        "Single-file React. Inline styles, no Tailwind. SVG flowchart so the layout stays crisp at any zoom. All four workflows share one palette (Heritage Silver) so the eye can compare them directly — then each workflow gets its own accent tint so you always know which flow you're in. Every interactive element is keyboard-accessible, announced to screen readers, and respects prefers-reduced-motion.",
+    },
+    {
+      id: "reflections",
+      title: "What I'd change next",
+      body:
+        "Next revision adds shape icons alongside lane colors (a11y win for color-blind reviewers), a 'compare workflows' mode for side-by-side reading, and an export-to-PDF button so hiring managers can carry the artifact into a call. I'd also wire each reliability stat to highlight the specific nodes it applies to.",
+    },
+  ];
+  return (
+    <section
+      id="case-study"
+      aria-label="Case study"
+      style={{
+        background: COLORS.background,
+        padding: "80px 24px 60px",
+        fontFamily: FONT_STACK,
+        borderTop: `1px solid ${COLORS.borderColor}`,
+      }}
+    >
+      <div style={{ maxWidth: SHELL.maxW, margin: "0 auto" }}>
+        <div
+          style={{
+            fontSize: 11,
+            color: COLORS.textSecondary,
+            letterSpacing: 2,
+            textTransform: "uppercase",
+            fontWeight: 700,
+            borderLeft: `3px solid ${COLORS.accent}`,
+            paddingLeft: 10,
+          }}
+        >
+          Case study
+        </div>
+        <h2
+          style={{
+            fontSize: 28,
+            fontWeight: 700,
+            margin: "8px 0 32px",
+            color: COLORS.text,
+            letterSpacing: -0.3,
+          }}
+        >
+          How this got built
+        </h2>
+        <div
+          className="zv-case-grid"
+          style={{
+            display: "grid",
+            gridTemplateColumns: "minmax(180px, 220px) 1fr",
+            gap: 48,
+            alignItems: "start",
+          }}
+        >
+          <nav
+            aria-label="Case study sections"
+            className="zv-case-toc"
+            style={{
+              position: "sticky",
+              top: 80,
+              fontSize: 13,
+              display: "flex",
+              flexDirection: "column",
+              gap: 4,
+            }}
+          >
+            <div
+              style={{
+                fontSize: 11,
+                textTransform: "uppercase",
+                letterSpacing: 1.4,
+                color: COLORS.textSecondary,
+                fontWeight: 700,
+                marginBottom: 8,
+              }}
+            >
+              On this page
+            </div>
+            {sections.map((s) => (
+              <a
+                key={s.id}
+                href={`#${s.id}`}
+                className="zv-toc-link"
+                style={{
+                  color: COLORS.textSecondary,
+                  textDecoration: "none",
+                  padding: "6px 0 6px 12px",
+                  borderLeft: `2px solid ${COLORS.borderColor}`,
+                  fontWeight: 600,
+                }}
+              >
+                {s.title}
+              </a>
+            ))}
+          </nav>
+          <div style={{ display: "flex", flexDirection: "column", gap: 36 }}>
+            {sections.map((s) => (
+              <article id={s.id} key={s.id}>
+                <h3
+                  style={{
+                    fontSize: 22,
+                    fontWeight: 700,
+                    margin: "0 0 10px",
+                    color: COLORS.text,
+                    letterSpacing: -0.2,
+                  }}
+                >
+                  {s.title}
+                </h3>
+                <p
+                  style={{
+                    fontSize: 16,
+                    color: COLORS.text,
+                    lineHeight: 1.65,
+                    margin: 0,
+                    maxWidth: 640,
+                  }}
+                >
+                  {s.body}
+                </p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ShellFooterCTA() {
+  return (
+    <footer
+      role="contentinfo"
+      style={{
+        background: COLORS.text,
+        color: COLORS.cardBg,
+        fontFamily: FONT_STACK,
+        padding: "72px 24px 36px",
+      }}
+    >
+      <div style={{ maxWidth: SHELL.maxW, margin: "0 auto" }}>
+        <div
+          className="zv-footer-grid"
+          style={{
+            display: "grid",
+            gridTemplateColumns: "1.4fr 1fr",
+            gap: 48,
+            alignItems: "end",
+            marginBottom: 48,
+          }}
+        >
+          <div>
+            <div
+              style={{
+                fontSize: 11,
+                textTransform: "uppercase",
+                letterSpacing: 2,
+                color: "rgba(250, 251, 253, 0.55)",
+                fontWeight: 700,
+                marginBottom: 12,
+              }}
+            >
+              Next piece →
+            </div>
+            <h2
+              style={{
+                fontSize: 36,
+                fontWeight: 700,
+                margin: 0,
+                lineHeight: 1.15,
+                letterSpacing: -0.4,
+                maxWidth: 560,
+              }}
+            >
+              Want automation like this in your org?
+            </h2>
+            <p
+              style={{
+                fontSize: 16,
+                color: "rgba(250, 251, 253, 0.7)",
+                lineHeight: 1.55,
+                marginTop: 14,
+                marginBottom: 0,
+                maxWidth: 480,
+              }}
+            >
+              I'm open to EA, operations, and automation roles. If the systems thinking here
+              maps to a problem you're solving, I'd love to talk.
+            </p>
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 10, alignItems: "flex-start" }}>
+            <a
+              href="mailto:vikkir29@gmail.com"
+              style={{
+                padding: "14px 22px",
+                borderRadius: 10,
+                background: COLORS.cardBg,
+                color: COLORS.text,
+                textDecoration: "none",
+                fontSize: 15,
+                fontWeight: 700,
+                fontFamily: FONT_STACK,
+              }}
+            >
+              Get in touch →
+            </a>
+            <a
+              href="https://github.com/vika29-gif/zapier-visualizer"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                padding: "14px 22px",
+                borderRadius: 10,
+                background: "transparent",
+                color: COLORS.cardBg,
+                textDecoration: "none",
+                fontSize: 15,
+                fontWeight: 700,
+                border: `1px solid rgba(250, 251, 253, 0.3)`,
+                fontFamily: FONT_STACK,
+              }}
+            >
+              View source ↗
+            </a>
+          </div>
+        </div>
+        <div
+          style={{
+            fontSize: 12,
+            color: "rgba(250, 251, 253, 0.4)",
+            borderTop: "1px solid rgba(250, 251, 253, 0.15)",
+            paddingTop: 24,
+            display: "flex",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: 12,
+          }}
+        >
+          <span>© 2026 Devika Ramkaran · Built with React + Vite</span>
+          <span>vikkir29@gmail.com</span>
+        </div>
+      </div>
+    </footer>
+  );
+}
+
+function ShellShortcutOverlay() {
+  const [open, setOpen] = useState(false);
+  useEffect(() => {
+    const handler = (e) => {
+      const el = e.target;
+      const inField =
+        el instanceof HTMLElement &&
+        (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.isContentEditable);
+      if (inField) return;
+      if (e.key === "?" || (e.shiftKey && e.key === "/")) {
+        e.preventDefault();
+        setOpen((o) => !o);
+      } else if (e.key === "Escape") {
+        setOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
+  if (!open) return null;
+  const shortcuts = [
+    { key: "Tab", desc: "Move focus forward" },
+    { key: "Shift + Tab", desc: "Move focus back" },
+    { key: "Enter / Space", desc: "Activate focused node" },
+    { key: "Esc", desc: "Close this overlay" },
+    { key: "?", desc: "Toggle shortcuts" },
+  ];
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label="Keyboard shortcuts"
+      onClick={() => setOpen(false)}
+      style={{
+        position: "fixed",
+        inset: 0,
+        zIndex: 100,
+        background: "rgba(42, 53, 71, 0.45)",
+        backdropFilter: "blur(3px)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 20,
+        fontFamily: FONT_STACK,
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          background: COLORS.cardBg,
+          borderRadius: 14,
+          padding: "28px 32px",
+          maxWidth: 440,
+          width: "100%",
+          boxShadow: "0 30px 80px rgba(42, 53, 71, 0.35)",
+          border: `1px solid ${COLORS.borderColor}`,
+        }}
+      >
+        <div
+          style={{
+            fontSize: 11,
+            textTransform: "uppercase",
+            letterSpacing: 2,
+            color: COLORS.textSecondary,
+            fontWeight: 700,
+            marginBottom: 4,
+          }}
+        >
+          Keyboard
+        </div>
+        <h3 style={{ margin: "0 0 20px", fontSize: 22, fontWeight: 700, color: COLORS.text }}>
+          Shortcuts
+        </h3>
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {shortcuts.map((s) => (
+            <div
+              key={s.key}
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                gap: 14,
+              }}
+            >
+              <span
+                style={{
+                  fontFamily: MONO_STACK,
+                  fontSize: 12,
+                  padding: "4px 10px",
+                  borderRadius: 6,
+                  background: COLORS.cardBgMuted,
+                  border: `1px solid ${COLORS.borderColor}`,
+                  color: COLORS.text,
+                  fontWeight: 600,
+                }}
+              >
+                {s.key}
+              </span>
+              <span style={{ fontSize: 14, color: COLORS.textSecondary, textAlign: "right" }}>
+                {s.desc}
+              </span>
+            </div>
+          ))}
+        </div>
+        <button
+          onClick={() => setOpen(false)}
+          style={{
+            marginTop: 24,
+            background: COLORS.accent,
+            color: "#FFFFFF",
+            border: "none",
+            borderRadius: 8,
+            padding: "10px 16px",
+            fontSize: 14,
+            fontWeight: 600,
+            cursor: "pointer",
+            width: "100%",
+            fontFamily: FONT_STACK,
+          }}
+        >
+          Got it
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function ShellKeyboardNudge() {
+  return (
+    <div
+      aria-hidden="true"
+      className="zv-nudge"
+      style={{
+        position: "fixed",
+        bottom: 20,
+        right: 20,
+        zIndex: 40,
+        background: COLORS.cardBg,
+        border: `1px solid ${COLORS.borderColor}`,
+        borderRadius: 20,
+        padding: "6px 14px",
+        fontSize: 11,
+        color: COLORS.textSecondary,
+        fontFamily: FONT_STACK,
+        fontWeight: 600,
+        boxShadow: "0 2px 8px rgba(42, 53, 71, 0.08)",
+        pointerEvents: "none",
+      }}
+    >
+      Press{" "}
+      <kbd
+        style={{
+          fontFamily: MONO_STACK,
+          background: COLORS.cardBgMuted,
+          padding: "1px 6px",
+          borderRadius: 4,
+          fontSize: 10,
+          border: `1px solid ${COLORS.borderColor}`,
+          color: COLORS.text,
+          marginLeft: 2,
+        }}
+      >
+        ?
+      </kbd>{" "}
+      for shortcuts
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Default export — full portfolio page
+// ---------------------------------------------------------------------------
+export default function ZapierVisualizer() {
+  return (
+    <div
+      style={{
+        background: COLORS.background,
+        minHeight: "100vh",
+        color: COLORS.text,
+        fontFamily: FONT_STACK,
+      }}
+    >
+      <style>{`
+        html { scroll-behavior: smooth; }
+        .zv-nav-link, .zv-toc-link {
+          padding: 8px 14px; border-radius: 8px; text-decoration: none;
+          font-size: 13px; font-weight: 600; color: #566175;
+          transition: color 120ms ease, background 120ms ease, border-color 120ms ease;
+        }
+        .zv-nav-link:hover, .zv-toc-link:hover {
+          color: #2A3547; background: rgba(107, 127, 171, 0.08);
+        }
+        .zv-nav-link:focus-visible, .zv-toc-link:focus-visible {
+          outline: 2px solid #6B7FAB; outline-offset: 2px;
+        }
+        .zv-stack-chip { transition: border-color 150ms ease, transform 150ms ease; }
+        .zv-stack-chip:hover { border-color: rgba(107, 127, 171, 0.5); transform: translateY(-1px); }
+        .zv-nudge { animation: zv-nudge-in 400ms 1.2s backwards cubic-bezier(.2,.7,.2,1); }
+        @keyframes zv-nudge-in {
+          from { opacity: 0; transform: translateY(8px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        a:focus-visible, button:focus-visible {
+          outline: 2px solid #6B7FAB; outline-offset: 2px; border-radius: 6px;
+        }
+        @media (max-width: 960px) {
+          .zv-metrics-grid { grid-template-columns: 1fr 1fr !important; gap: 32px !important; }
+        }
+        @media (max-width: 820px) {
+          .zv-metrics-grid { grid-template-columns: 1fr !important; gap: 28px !important; }
+          .zv-case-grid { grid-template-columns: 1fr !important; gap: 24px !important; }
+          .zv-case-toc { position: static !important; flex-direction: row !important; flex-wrap: wrap !important; }
+          .zv-case-toc a { border-left: none !important; border-bottom: 2px solid rgba(42,53,71,0.14); padding: 6px 12px !important; }
+          .zv-footer-grid { grid-template-columns: 1fr !important; gap: 32px !important; align-items: start !important; }
+          .zv-hero-headline { font-size: 34px !important; }
+        }
+        @media (max-width: 640px) {
+          .zv-hero-headline { font-size: 28px !important; }
+          .zv-nav-brand-name { display: none; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          html { scroll-behavior: auto; }
+          .zv-nudge { animation: none; }
+        }
+      `}</style>
+      <ShellTopNav />
+      <ShellHero />
+      <ShellMetricsBand />
+      <ShellDemoFrame>
+        <ZapierVisualizerCore />
+      </ShellDemoFrame>
+      <ShellCaseStudy />
+      <ShellFooterCTA />
+      <ShellShortcutOverlay />
+      <ShellKeyboardNudge />
     </div>
   );
 }
