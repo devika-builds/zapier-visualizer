@@ -7,7 +7,7 @@ The sandbox can't reach GitHub to push, so finish from your own terminal.
 
 Go to **https://github.com/new** and create:
 
-- **Owner:** `vika29-gif`
+- **Owner:** `devika-builds`
 - **Repo name:** `zapier-visualizer`
 - **Visibility:** Public
 - **Do NOT** tick "Add a README", "Add .gitignore", or "Choose a license" — the repo must be empty
@@ -29,7 +29,7 @@ Three commits go up together: the initial scaffold, the portfolio shell redesign
 
 ## 3. Deploy on Vercel
 
-Go to **https://vercel.com/new** → **Import Git Repository** → select `vika29-gif/zapier-visualizer`.
+Go to **https://vercel.com/new** → **Import Git Repository** → select `devika-builds/zapier-visualizer`.
 
 Vercel auto-detects Vite. Defaults are correct:
 
