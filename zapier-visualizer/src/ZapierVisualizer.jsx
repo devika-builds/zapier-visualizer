@@ -2190,7 +2190,7 @@ function ShellFooterCTA() {
               Get in touch →
             </a>
             <a
-              href="https://github.com/vika29-gif/zapier-visualizer"
+              href="https://github.com/devika-builds/zapier-visualizer"
               target="_blank"
               rel="noopener noreferrer"
               style={{
