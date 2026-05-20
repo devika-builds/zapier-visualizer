@@ -831,7 +831,7 @@ function NodeDetail({ node, workflow, onClose }) {
       </div>
 
       {/* Metric grid */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+      <div className="zv-card-metrics" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         {[
           { label: "Time Impact", value: node.timeSaved, chip: COLORS.sage, chipBorder: COLORS.sageBorder },
           { label: "Setup Time", value: node.setupTime, chip: COLORS.slateBlue, chipBorder: COLORS.slateBlueBorder },
@@ -970,7 +970,7 @@ function WorkflowOverview({ workflow }) {
       </div>
 
       {/* Metric pair */}
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+      <div className="zv-card-metrics" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
         {[
           { label: "Time Saved", value: workflow.timeSaved, chip: COLORS.sage, chipBorder: COLORS.sageBorder },
           { label: "Impact", value: workflow.roi, chip: COLORS.accentDim, chipBorder: COLORS.accent },
@@ -1346,6 +1346,7 @@ function ZapierVisualizerCore() {
         }
       `}</style>
       <div
+        className="zv-shell"
         style={{
           background: COLORS.cardBg,
           color: COLORS.text,
@@ -1451,6 +1452,7 @@ function ZapierVisualizerCore() {
 
         {/* Workflow tabs */}
         <div
+          className="zv-tab-bar"
           style={{
             display: "flex",
             gap: 4,
@@ -1503,6 +1505,7 @@ function ZapierVisualizerCore() {
 
         {/* Main 2-col layout */}
         <div
+          className="zv-core-grid"
           style={{
             display: "grid",
             gridTemplateColumns: "minmax(260px, 290px) 1fr",
@@ -1657,7 +1660,7 @@ function ShellTopNav() {
           <a href="#demo" className="zv-nav-link">Demo</a>
           <a href="#case-study" className="zv-nav-link">Case study</a>
           <a
-            href="mailto:vikkir29@gmail.com"
+            href="mailto:devikaramkaran.ops@gmail.com"
             style={{
               padding: "8px 16px",
               borderRadius: 8,
@@ -1716,7 +1719,7 @@ function ShellHero() {
           maxWidth: 860,
         }}
       >
-        Four production-ready automations,{" "}
+        Four automations I designed,{" "}
         <span style={{ color: COLORS.accent }}>visualized end-to-end</span>.
       </h1>
       <p
@@ -1729,9 +1732,9 @@ function ShellHero() {
           marginBottom: 28,
         }}
       >
-        The actual Zapier workflows I've designed, deployed, and monitored as an
-        executive assistant — collapsing hours of manual work into reliable flows.
-        Click any node to see the trigger, data used, time saved, and setup time.
+        Zapier workflows I architected to demonstrate how I'd automate repetitive
+        ops work — each one mapped from trigger to outcome with projected time savings.
+        Click any node to see the logic, data flow, and setup time.
       </p>
       <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 30 }}>
         {stack.map((s) => (
@@ -2157,7 +2160,7 @@ function ShellFooterCTA() {
                 maxWidth: 560,
               }}
             >
-              Want automation like this in your org?
+              Like how I think about automation?
             </h2>
             <p
               style={{
@@ -2175,7 +2178,7 @@ function ShellFooterCTA() {
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 10, alignItems: "flex-start" }}>
             <a
-              href="mailto:vikkir29@gmail.com"
+              href="mailto:devikaramkaran.ops@gmail.com"
               style={{
                 padding: "14px 22px",
                 borderRadius: 10,
@@ -2222,7 +2225,7 @@ function ShellFooterCTA() {
           }}
         >
           <span>© 2026 Devika Ramkaran · Built with React + Vite</span>
-          <span>vikkir29@gmail.com</span>
+          <span>devikaramkaran.ops@gmail.com</span>
         </div>
       </div>
     </footer>
@@ -2448,6 +2451,15 @@ export default function ZapierVisualizer() {
         @media (max-width: 640px) {
           .zv-hero-headline { font-size: 28px !important; }
           .zv-nav-brand-name { display: none; }
+          .zv-core-grid { grid-template-columns: 1fr !important; gap: 14px !important; }
+          .zv-card-metrics { grid-template-columns: 1fr !important; }
+          .zv-tab-bar { width: 100% !important; overflow-x: auto !important; -webkit-overflow-scrolling: touch; }
+          .zv-tab-bar .zv-tab { min-width: auto !important; font-size: 11px !important; padding: 6px 10px 6px 8px !important; }
+          .zv-shell { padding: 16px !important; min-height: auto !important; }
+          .zv-demo-frame { padding: 16px !important; }
+          .zv-metrics-grid { gap: 20px !important; }
+          .zv-case-grid { gap: 16px !important; }
+          .zv-footer-grid { gap: 24px !important; }
         }
         @media (prefers-reduced-motion: reduce) {
           html { scroll-behavior: auto; }
