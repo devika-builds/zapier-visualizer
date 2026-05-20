@@ -1383,22 +1383,10 @@ function ZapierVisualizerCore() {
                 paddingLeft: 8,
               }}
             >
-              Portfolio Piece · Automation Design
-            </div>
-            <div style={{ fontSize: 22, fontWeight: 700, marginTop: 4 }}>
               Zapier Workflow Visualizer
             </div>
-            <div
-              style={{
-                fontSize: 12,
-                color: COLORS.textSecondary,
-                marginTop: 4,
-                maxWidth: 640,
-              }}
-            >
-              Four automations I architected to demonstrate how I'd streamline EA work —
-              each one mapped from trigger to outcome with projected time savings. Click any
-              step to see the logic and how I'd set it up.
+            <div style={{ fontSize: 22, fontWeight: 700, marginTop: 4 }}>
+              Select a workflow, click any step
             </div>
           </div>
 
