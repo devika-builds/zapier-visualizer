@@ -1396,9 +1396,9 @@ function ZapierVisualizerCore() {
                 maxWidth: 640,
               }}
             >
-              Four production-ready automations I've designed and deployed — each one
-              collapses hours of manual EA work into a single reliable flow. Click any
-              step to see the implementation logic and time saved.
+              Four automations I architected to demonstrate how I'd streamline EA work —
+              each one mapped from trigger to outcome with projected time savings. Click any
+              step to see the logic and how I'd set it up.
             </div>
           </div>
 
