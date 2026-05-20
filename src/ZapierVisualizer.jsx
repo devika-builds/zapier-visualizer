@@ -1406,7 +1406,7 @@ function ZapierVisualizerCore() {
           <div style={{ display: "flex", gap: 18, flexWrap: "wrap" }}>
             {[
               { value: "13+", label: "hrs saved / week" },
-              { value: "4", label: "live workflows" },
+              { value: "4", label: "workflows designed" },
               { value: "24", label: "automated steps" },
             ].map(({ value, label }) => (
               <div
@@ -1799,7 +1799,7 @@ function ShellHero() {
 function ShellMetricsBand() {
   const metrics = [
     { value: 13, suffix: "+", unit: "hrs saved / week", hero: true, hint: "conservative estimate, compounds weekly" },
-    { value: 4, suffix: "", unit: "live workflows", hint: "all in production today" },
+    { value: 4, suffix: "", unit: "workflows designed", hint: "each mapped end-to-end" },
     { value: 24, suffix: "", unit: "automated steps", hint: "across 12 connected apps" },
   ];
   return (
